@@ -1,8 +1,8 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -33,21 +33,33 @@ func crearYEliminarContenedor() (time.Duration, error) {
 
 func main() {
 	numIteraciones := 100
-	archivoLog, err := os.Create("testContGo.log")
+	tiempoActual := time.Now()
+	nombreArchivoCSV := fmt.Sprintf("testContGo_%s.csv", tiempoActual.Format("20060102150405"))
+
+	archivoCSV, err := os.Create(nombreArchivoCSV)
 	if err != nil {
-		log.Fatalf("Error al crear el archivo de registro: %v", err)
+		fmt.Printf("Error al crear el archivo CSV: %v\n", err)
+		return
 	}
-	defer archivoLog.Close()
+	defer archivoCSV.Close()
+
+	writer := csv.NewWriter(archivoCSV)
+	defer writer.Flush()
 
 	fmt.Println("Ejecutando pruebas de creación de contenedor...")
+
+	// Escribir encabezado en el CSV
+	writer.Write([]string{"Iteración", "Tiempo Transcurrido (ns)"})
 
 	for i := 0; i < numIteraciones; i++ {
 		transcurrido, err := crearYEliminarContenedor()
 		if err != nil {
-			log.Printf("Error en la iteración %d: %v", i+1, err)
+			fmt.Printf("Error en la iteración %d: %v\n", i+1, err)
 		} else {
 			fmt.Printf("Iteración %d: %s\n", i+1, transcurrido)
-			fmt.Fprintf(archivoLog, "Iteración %d: %s\n", i+1, transcurrido)
+			writer.Write([]string{fmt.Sprintf("%d", i+1), fmt.Sprintf("%d", transcurrido.Nanoseconds())})
 		}
 	}
+
+	fmt.Printf("Pruebas completadas. Resultados guardados en %s\n", nombreArchivoCSV)
 }

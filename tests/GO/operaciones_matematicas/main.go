@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"math"
 	"os"
@@ -9,21 +10,43 @@ import (
 
 func main() {
 	fmt.Println("Ejecutando pruebas de rendimiento...")
-	os.Remove("testMathGo.log") // Elimina el archivo si ya existe
 
-	archivo, _ := os.Create("testMathGo.log")
-	defer archivo.Close()
+	nombreArchivoCSV := "testMathGo.csv"
+	archivoCSV, _ := os.Create(nombreArchivoCSV)
+	defer archivoCSV.Close()
 
-	pruebaRendimiento(archivo, "Suma", sumar)
-	pruebaRendimiento(archivo, "Resta", restar)
-	pruebaRendimiento(archivo, "RaizCuadrada", raizCuadrada)
-	pruebaRendimiento(archivo, "Multiplicacion", multiplicar)
-	pruebaRendimiento(archivo, "Division", dividir)
-	pruebaRendimiento(archivo, "Seno", seno)
-	pruebaRendimiento(archivo, "Coseno", coseno)
+	writer := csv.NewWriter(archivoCSV)
+	defer writer.Flush()
+
+	writer.Write([]string{"Operación", "Repetición", "Tiempo (ns)"})
+
+	// Iteraciones de calentamiento
+	calentar(sumar)
+	calentar(restar)
+	calentar(raizCuadrada)
+	calentar(multiplicar)
+	calentar(dividir)
+	calentar(seno)
+	calentar(coseno)
+
+	// Mediciones reales
+	pruebaRendimiento(writer, "Suma", sumar)
+	pruebaRendimiento(writer, "Resta", restar)
+	pruebaRendimiento(writer, "RaizCuadrada", raizCuadrada)
+	pruebaRendimiento(writer, "Multiplicacion", multiplicar)
+	pruebaRendimiento(writer, "Division", dividir)
+	pruebaRendimiento(writer, "Seno", seno)
+	pruebaRendimiento(writer, "Coseno", coseno)
 }
 
-func pruebaRendimiento(archivo *os.File, operacion string, funcionOperacion func()) {
+func calentar(funcionOperacion func()) {
+	numRepeticiones := 20
+	for i := 0; i < numRepeticiones; i++ {
+		funcionOperacion()
+	}
+}
+
+func pruebaRendimiento(writer *csv.Writer, operacion string, funcionOperacion func()) {
 	numRepeticiones := 100
 	duraciones := make([]time.Duration, numRepeticiones)
 
@@ -33,7 +56,8 @@ func pruebaRendimiento(archivo *os.File, operacion string, funcionOperacion func
 		elapsed := time.Since(tiempoInicio)
 		duraciones[i] = elapsed
 
-		fmt.Fprintf(archivo, "%s - Repetición %d: %s\n", operacion, i+1, elapsed)
+		fmt.Printf("%s - Repetición %d: %s\n", operacion, i+1, elapsed)
+		writer.Write([]string{operacion, fmt.Sprintf("%d", i+1), fmt.Sprintf("%d", elapsed.Nanoseconds())})
 	}
 }
 

@@ -1,64 +1,89 @@
+use std::error::Error;
 use std::fs::File;
-use std::io::Write;
-use std::time::{Instant};
+use std::time::Instant;
+use csv::WriterBuilder;
 
+fn main() -> Result<(), Box<dyn Error>> {
+    println!("Ejecutando pruebas de rendimiento...");
 
-fn main() {
-    let mut archivo_log = File::create("testMathRust.log").expect("Error al crear el archivo de registro");
-    
-    archivo_log.write_all(b"Ejecutando pruebas de rendimiento...\n").expect("Error al escribir en el archivo de registro");
-    
-    prueba_rendimiento("Suma", &mut archivo_log, sumar);
-    prueba_rendimiento("Resta", &mut archivo_log, restar);
-    prueba_rendimiento("RaízCuadrada", &mut archivo_log, raiz_cuadrada);
-    prueba_rendimiento("Multiplicación", &mut archivo_log, multiplicar);
-    prueba_rendimiento("División", &mut archivo_log, dividir);
-    prueba_rendimiento("Seno", &mut archivo_log, seno);
-    prueba_rendimiento("Coseno", &mut archivo_log, coseno);
+    let nombre_archivo_csv = "testMathRust.csv";
+    let archivo_csv = File::create(nombre_archivo_csv)?;
+    let mut writer = WriterBuilder::new().from_writer(archivo_csv);
+
+    writer.write_record(&["Operación", "Repetición", "Tiempo (ns)"])?;
+
+    // Iteraciones de calentamiento
+    calentar(sumar);
+    calentar(restar);
+    calentar(raiz_cuadrada);
+    calentar(multiplicar);
+    calentar(dividir);
+    calentar(seno);
+    calentar(coseno);
+
+    // Mediciones reales
+    prueba_rendimiento(&mut writer, "Suma", sumar)?;
+    prueba_rendimiento(&mut writer, "Resta", restar)?;
+    prueba_rendimiento(&mut writer, "RaizCuadrada", raiz_cuadrada)?;
+    prueba_rendimiento(&mut writer, "Multiplicacion", multiplicar)?;
+    prueba_rendimiento(&mut writer, "Division", dividir)?;
+    prueba_rendimiento(&mut writer, "Seno", seno)?;
+    prueba_rendimiento(&mut writer, "Coseno", coseno)?;
+
+    println!("Pruebas completadas. Resultados guardados en {}", nombre_archivo_csv);
+
+    Ok(())
 }
 
-fn prueba_rendimiento<F>(operacion: &str, archivo_log: &mut File, funcion_operacion: F)
-where
-    F: Fn() -> (),
-{
-    let num_repeticiones = 100;
-    let mut duraciones = Vec::with_capacity(num_repeticiones);
-
-    for i in 0..num_repeticiones {
-        let tiempo_inicio = Instant::now();
+fn calentar(funcion_operacion: fn()) {
+    let num_repeticiones = 20;
+    for _ in 0..num_repeticiones {
         funcion_operacion();
-        let transcurrido = tiempo_inicio.elapsed();
-        duraciones.push(transcurrido);
-
-        let duracion_ns = transcurrido.as_nanos();
-        writeln!(archivo_log, "{} - Repetición {}: {}ns", operacion, i + 1, duracion_ns).expect("Error al escribir en el archivo de registro");
     }
 }
 
+fn prueba_rendimiento(writer: &mut csv::Writer<File>, operacion: &str, funcion_operacion: fn()) -> Result<(), Box<dyn Error>> {
+    let num_repeticiones = 100;
+    let mut duraciones = Vec::with_capacity(num_repeticiones);
+
+    for _ in 0..num_repeticiones {
+        let tiempo_inicio = Instant::now();
+        funcion_operacion();
+        let elapsed = Instant::now().duration_since(tiempo_inicio);
+
+        println!("{} - Repetición {}: {:?}", operacion, duraciones.len() + 1, elapsed);
+        writer.write_record(&[operacion, &(duraciones.len() + 1).to_string(), &elapsed.as_nanos().to_string()])?;
+
+        duraciones.push(elapsed);
+    }
+
+    Ok(())
+}
+
 fn sumar() {
-    let _resultado = 2 + 3;
+    let _ = 2 + 3;
 }
 
 fn restar() {
-    let _resultado = 5 - 3;
+    let _ = 5 - 3;
 }
 
 fn raiz_cuadrada() {
-    let _resultado = 16f64.sqrt();
+    let _ = 16.0f64.sqrt();
 }
 
 fn multiplicar() {
-    let _resultado = 4 * 6;
+    let _ = 4 * 6;
 }
 
 fn dividir() {
-    let _resultado = 10.0 / 2.0;
+    let _ = 10.0 / 2.0;
 }
 
 fn seno() {
-    let _resultado = 0.5_f64.sin();
+    let _ = f64::sin(0.5);
 }
 
 fn coseno() {
-    let _resultado = 0.5_f64.cos();
+    let _ = f64::cos(std::f64::consts::FRAC_PI_2);
 }
