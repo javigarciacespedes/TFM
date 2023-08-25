@@ -1,44 +1,46 @@
-use std::io::{Read, Write};
-use std::net::TcpListener;
-use std::thread;
+use std::error::Error;
+use std::fs::File;
+use std::time::Instant;
+use csv::Writer;
+use reqwest;
+use serde_json::json;
+use tokio;
 
-fn main() {
-    let listener = TcpListener::bind("127.0.0.1:8080").expect("Error al enlazar al puerto");
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    let get_url = "https://jsonplaceholder.typicode.com/posts/1";
+    let post_url = "https://jsonplaceholder.typicode.com/posts";
 
-    println!("Servidor escuchando en http://127.0.0.1:8080...");
+    let file = File::create("resultados.csv")?;
+    let mut writer = Writer::from_writer(file);
 
-    for stream in listener.incoming() {
-        match stream {
-            Ok(stream) => {
-                thread::spawn(|| {
-                    handle_request(stream);
-                });
-            }
-            Err(e) => {
-                eprintln!("Error: {}", e);
-            }
-        }
+    writer.write_record(&["Tipo", "Tiempo"])?;
+
+    for _ in 0..10 {
+        // Medir tiempo para GET
+        let get_start_time = Instant::now();
+        reqwest::get(get_url).await?;
+        let get_end_time = Instant::now();
+
+        let get_duration = get_end_time.duration_since(get_start_time);
+        writer.write_record(&["GET", &format!("{:?}", get_duration)])?;
+
+        // Medir tiempo para POST
+        let post_start_time = Instant::now();
+        let post_data = json!({
+            "title": "foo",
+            "body": "bar",
+            "userId": 1
+        });
+        let client = reqwest::Client::new();
+        let post_request = client.post(post_url).body(post_data.to_string()).header(reqwest::header::CONTENT_TYPE, "application/json");
+        post_request.send().await?;
+        let post_end_time = Instant::now();
+
+        let post_duration = post_end_time.duration_since(post_start_time);
+        writer.write_record(&["POST", &format!("{:?}", post_duration)])?;
     }
-}
 
-fn handle_request(mut stream: std::net::TcpStream) {
-    let mut buffer = [0; 1024];
-    stream.read(&mut buffer).expect("Error al leer los datos del stream");
-
-    let request = String::from_utf8_lossy(&buffer[..]);
-
-    let response = match request.lines().next() {
-        Some(line) if line.starts_with("GET") => "Respuesta de GET\n",
-        Some(line) if line.starts_with("POST") => "Respuesta de POST\n",
-        _ => "Método no soportado\n",
-    };
-
-    let response = format!(
-        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
-        response.len(),
-        response
-    );
-
-    stream.write_all(response.as_bytes()).expect("Error al escribir en el stream");
-    stream.flush().expect("Error al hacer flush en el stream");
+    println!("Pruebas completadas. Resultados almacenados en resultados.csv");
+    Ok(())
 }
