@@ -10,9 +10,9 @@ import (
 )
 
 func crearYEliminarContenedor() (time.Duration, error) {
-	// Crear el contenedor
+	// Se crea el contenedor
 	cmdCrear := exec.Command("docker", "run", "-d", "nginx:latest")
-	tiempoInicio := time.Now() // Registrar el tiempo de inicio
+	tiempoInicio := time.Now() // Tiempo de inicio
 	salidaCrear, err := cmdCrear.Output()
 	if err != nil {
 		return 0, fmt.Errorf("Error al crear el contenedor: %v", err)
@@ -48,7 +48,6 @@ func main() {
 
 	fmt.Println("Ejecutando pruebas de creación de contenedor...")
 
-	// Escribir encabezado en el CSV
 	writer.Write([]string{"Iteración", "Tiempo Transcurrido (ns)"})
 
 	for i := 0; i < numIteraciones; i++ {

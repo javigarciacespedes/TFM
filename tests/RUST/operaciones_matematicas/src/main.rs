@@ -12,15 +12,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     writer.write_record(&["Operación", "Repetición", "Tiempo (ns)"])?;
 
-    // Iteraciones de calentamiento
-    calentar(sumar);
-    calentar(restar);
-    calentar(raiz_cuadrada);
-    calentar(multiplicar);
-    calentar(dividir);
-    calentar(seno);
-    calentar(coseno);
-
     // Mediciones reales
     prueba_rendimiento(&mut writer, "Suma", sumar)?;
     prueba_rendimiento(&mut writer, "Resta", restar)?;
@@ -33,13 +24,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("Pruebas completadas. Resultados guardados en {}", nombre_archivo_csv);
 
     Ok(())
-}
-
-fn calentar(funcion_operacion: fn()) {
-    let num_repeticiones = 20;
-    for _ in 0..num_repeticiones {
-        funcion_operacion();
-    }
 }
 
 fn prueba_rendimiento(writer: &mut csv::Writer<File>, operacion: &str, funcion_operacion: fn()) -> Result<(), Box<dyn Error>> {

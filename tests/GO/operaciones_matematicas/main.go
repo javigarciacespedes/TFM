@@ -20,16 +20,6 @@ func main() {
 
 	writer.Write([]string{"Operación", "Repetición", "Tiempo (ns)"})
 
-	// Iteraciones de calentamiento
-	calentar(sumar)
-	calentar(restar)
-	calentar(raizCuadrada)
-	calentar(multiplicar)
-	calentar(dividir)
-	calentar(seno)
-	calentar(coseno)
-
-	// Mediciones reales
 	pruebaRendimiento(writer, "Suma", sumar)
 	pruebaRendimiento(writer, "Resta", restar)
 	pruebaRendimiento(writer, "RaizCuadrada", raizCuadrada)
@@ -37,13 +27,8 @@ func main() {
 	pruebaRendimiento(writer, "Division", dividir)
 	pruebaRendimiento(writer, "Seno", seno)
 	pruebaRendimiento(writer, "Coseno", coseno)
-}
 
-func calentar(funcionOperacion func()) {
-	numRepeticiones := 20
-	for i := 0; i < numRepeticiones; i++ {
-		funcionOperacion()
-	}
+	fmt.Println("Pruebas terminadas")
 }
 
 func pruebaRendimiento(writer *csv.Writer, operacion string, funcionOperacion func()) {

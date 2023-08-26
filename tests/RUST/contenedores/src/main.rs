@@ -9,7 +9,7 @@ fn crear_y_eliminar_contenedor() -> Result<Duration, Box<dyn Error>> {
     let cmd_crear = Command::new("docker")
         .args(&["run", "-d", "nginx:latest"])
         .output()?;
-    let tiempo_inicio = Instant::now(); // Registrar el tiempo de inicio
+    let tiempo_inicio = Instant::now(); //Tiempo de inicio
     let id_contenedor = String::from_utf8_lossy(&cmd_crear.stdout).trim().to_string();
 
     // Calcular el tiempo de creación del contenedor
@@ -33,7 +33,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     println!("Ejecutando pruebas de creación de contenedor...");
 
-    // Escribir encabezado en el CSV
     writer.write_record(&["Iteración", "Tiempo Transcurrido (ns)"])?;
 
     for i in 0..num_iteraciones {
