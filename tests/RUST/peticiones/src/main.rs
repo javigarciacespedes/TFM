@@ -1,48 +1,57 @@
 use std::fs::File;
-use std::io::Write;
-use std::time::Instant;
+use std::io::{self, Write};
+use std::time::{Duration, Instant};
 use reqwest;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let get_url = "https://jsonplaceholder.typicode.com/posts/1";
-    let post_url = "https://jsonplaceholder.typicode.com/posts";
+async fn main() -> Result<(), reqwest::Error> {
+    let url_get = "https://jsonplaceholder.typicode.com/posts/1";
+    let url_post = "https://jsonplaceholder.typicode.com/posts";
 
-    let mut file = File::create("resultados.csv")?;
-    writeln!(file, "Iteración,Tipo,Tiempo")?;
+    let mut archivo_csv = File::create("resultados.csv").expect("Error al crear el archivo CSV");
 
-    let client = reqwest::Client::new();
+    writeln!(archivo_csv, "Iteración,Tipo,Tiempo (s)").expect("Error al escribir encabezado en el archivo");
 
-    for i in 0..10 {
-        //GET
-        let get_start_time = Instant::now();
-        let _ = client.get(get_url).send().await?;
-        let get_end_time = Instant::now();
+    for i in 0..5 {
+        // GET
+        let mut duracion_total_get = Duration::new(0, 0);
+        for _ in 0..10 {
+            let inicio_get = Instant::now();
+            reqwest::get(url_get)
+                .await?
+                .error_for_status()?
+                .bytes()
+                .await?;
+            let fin_get = Instant::now();
+            duracion_total_get += fin_get - inicio_get;
+        }
+        let duracion_total_get_s = duracion_total_get.as_secs_f32();
+        writeln!(archivo_csv, "{},{}, {:.4}", i + 1, "GET", duracion_total_get_s).expect("Error al escribir resultado en el archivo");
 
-        let get_duration = get_end_time.duration_since(get_start_time);
-        writeln!(file, "{},{},{}", i + 1, "GET", format!("{:?}", get_duration))?;
-        println!("Iteración {}: Operación GET registrada - Tiempo = {:?}", i + 1, get_duration);
+        println!("GET - Iteración {}: Tiempo total = {:.4} segundos", i + 1, duracion_total_get_s);
 
-        //POST
-        let post_start_time = Instant::now();
-        let json_data = serde_json::json!({
-            "title": "foo",
-            "body": "bar",
-            "userId": 1
-        });
-        let _ = client.post(post_url)
-            .header(reqwest::header::CONTENT_TYPE, "application/json")
-            .body(serde_json::to_string(&json_data)?)
-            .send()
-            .await?;
-        let post_end_time = Instant::now();
+        // POST
+        let mut duracion_total_post = Duration::new(0, 0);
+        for _ in 0..10 {
+            let inicio_post = Instant::now();
+            reqwest::Client::new()
+                .post(url_post)
+                .header("Content-Type", "application/json")
+                .body(r#"{"title": "foo", "body": "bar", "userId": 1}"#)
+                .send()
+                .await?
+                .error_for_status()?
+                .bytes()
+                .await?;
+            let fin_post = Instant::now();
+            duracion_total_post += fin_post - inicio_post;
+        }
+        let duracion_total_post_s = duracion_total_post.as_secs_f32();
+        writeln!(archivo_csv, "{},{}, {:.4}", i + 1, "POST", duracion_total_post_s).expect("Error al escribir resultado en el archivo");
 
-        let post_duration = post_end_time.duration_since(post_start_time);
-        writeln!(file, "{},{},{}", i + 1, "POST", format!("{:?}", post_duration))?;
-        println!("Iteración {}: Operación POST registrada - Tiempo = {:?}", i + 1, post_duration);
+        println!("POST - Iteración {}: Tiempo total = {:.4} segundos", i + 1, duracion_total_post_s);
     }
 
     println!("Pruebas completadas. Resultados almacenados en resultados.csv");
-
     Ok(())
 }

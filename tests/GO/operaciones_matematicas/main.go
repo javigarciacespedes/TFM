@@ -18,7 +18,7 @@ func main() {
 	writer := csv.NewWriter(archivoCSV)
 	defer writer.Flush()
 
-	writer.Write([]string{"Operación", "Repetición", "Tiempo (ns)"})
+	writer.Write([]string{"Operación", "Repetición", "Tiempo (0.0001s)"})
 
 	pruebaRendimiento(writer, "Suma", sumar)
 	pruebaRendimiento(writer, "Resta", restar)
@@ -32,17 +32,20 @@ func main() {
 }
 
 func pruebaRendimiento(writer *csv.Writer, operacion string, funcionOperacion func()) {
-	numRepeticiones := 100
-	duraciones := make([]time.Duration, numRepeticiones)
+	numRepeticiones := 5
+	numIteraciones := 100000000
+	duraciones := make([]float64, numRepeticiones)
 
 	for i := 0; i < numRepeticiones; i++ {
 		tiempoInicio := time.Now()
-		funcionOperacion()
-		elapsed := time.Since(tiempoInicio)
+		for i := 0; i < numIteraciones; i++ {
+			funcionOperacion()
+		}
+		elapsed := time.Since(tiempoInicio).Seconds() * 10000 // Convertir a décimas de segundo con cuatro decimales
 		duraciones[i] = elapsed
 
-		fmt.Printf("%s - Repetición %d: %s\n", operacion, i+1, elapsed)
-		writer.Write([]string{operacion, fmt.Sprintf("%d", i+1), fmt.Sprintf("%d", elapsed.Nanoseconds())})
+		fmt.Printf("%s - Repetición %d: %.4f (0.0001s)\n", operacion, i+1, elapsed)
+		writer.Write([]string{operacion, fmt.Sprintf("%d", i+1), fmt.Sprintf("%.4f", elapsed)})
 	}
 }
 

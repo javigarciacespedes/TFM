@@ -1,18 +1,18 @@
-use std::error::Error;
 use std::fs::File;
+use std::io::self;
 use std::time::Instant;
-use csv::WriterBuilder;
+use csv::Writer;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> io::Result<()> {
     println!("Ejecutando pruebas de rendimiento...");
 
     let nombre_archivo_csv = "testMathRust.csv";
     let archivo_csv = File::create(nombre_archivo_csv)?;
-    let mut writer = WriterBuilder::new().from_writer(archivo_csv);
 
-    writer.write_record(&["Operación", "Repetición", "Tiempo (ns)"])?;
+    let mut writer = Writer::from_writer(archivo_csv);
 
-    // Mediciones reales
+    writer.write_record(&["Operación", "Repetición", "Tiempo (0.0001s)"])?;
+
     prueba_rendimiento(&mut writer, "Suma", sumar)?;
     prueba_rendimiento(&mut writer, "Resta", restar)?;
     prueba_rendimiento(&mut writer, "RaizCuadrada", raiz_cuadrada)?;
@@ -21,24 +21,29 @@ fn main() -> Result<(), Box<dyn Error>> {
     prueba_rendimiento(&mut writer, "Seno", seno)?;
     prueba_rendimiento(&mut writer, "Coseno", coseno)?;
 
-    println!("Pruebas completadas. Resultados guardados en {}", nombre_archivo_csv);
-
+    println!("Pruebas terminadas");
+    
     Ok(())
 }
 
-fn prueba_rendimiento(writer: &mut csv::Writer<File>, operacion: &str, funcion_operacion: fn()) -> Result<(), Box<dyn Error>> {
-    let num_repeticiones = 100;
+fn prueba_rendimiento<F>(writer: &mut Writer<File>, operacion: &str, funcion_operacion: F) -> io::Result<()>
+where
+    F: Fn(),
+{
+    let num_repeticiones = 10;
+    let num_iteraciones = 100000000;
     let mut duraciones = Vec::with_capacity(num_repeticiones);
 
-    for _ in 0..num_repeticiones {
+    for i in 0..num_repeticiones {
         let tiempo_inicio = Instant::now();
-        funcion_operacion();
-        let elapsed = Instant::now().duration_since(tiempo_inicio);
-
-        println!("{} - Repetición {}: {:?}", operacion, duraciones.len() + 1, elapsed);
-        writer.write_record(&[operacion, &(duraciones.len() + 1).to_string(), &elapsed.as_nanos().to_string()])?;
-
+        for _ in 0..num_iteraciones {
+            funcion_operacion();
+        }
+        let elapsed = tiempo_inicio.elapsed().as_secs_f64() * 10000.0; // Convertir a décimas de segundo con cuatro decimales
         duraciones.push(elapsed);
+
+        println!("{} - Repetición {}: {:.4} (0.0001s)", operacion, i + 1, elapsed);
+        writer.write_record(&[operacion, &format!("{}", i + 1), &format!("{:.4}", elapsed)])?;
     }
 
     Ok(())
@@ -53,7 +58,7 @@ fn restar() {
 }
 
 fn raiz_cuadrada() {
-    let _ = 16.0f64.sqrt();
+    let _ = f64::sqrt(16.0);
 }
 
 fn multiplicar() {
@@ -69,5 +74,5 @@ fn seno() {
 }
 
 fn coseno() {
-    let _ = f64::cos(std::f64::consts::FRAC_PI_2);
+    let _ = f64::cos(0.5);
 }
