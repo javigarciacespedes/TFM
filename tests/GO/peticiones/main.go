@@ -13,7 +13,7 @@ func main() {
 	urlGET := "https://jsonplaceholder.typicode.com/posts/1"
 	urlPOST := "https://jsonplaceholder.typicode.com/posts"
 
-	archivo, err := os.Create("resultados.csv")
+	archivo, err := os.Create("testPeticionesGo.csv")
 	if err != nil {
 		fmt.Println("Error al crear el archivo CSV:", err)
 		return
@@ -25,7 +25,7 @@ func main() {
 
 	escritorCSV.Write([]string{"Iteración", "Tipo", "Tiempo (s)"})
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5000; i++ {
 		// GET
 		duracionTotalGET := time.Duration(0)
 		for j := 0; j < 10; j++ { // Ejecutar cada operación 10 veces

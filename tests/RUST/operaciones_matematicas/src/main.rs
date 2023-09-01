@@ -6,7 +6,7 @@ use csv::Writer;
 fn main() -> io::Result<()> {
     println!("Ejecutando pruebas de rendimiento...");
 
-    let nombre_archivo_csv = "testMathRust.csv";
+    let nombre_archivo_csv = "testOperacionesRust.csv";
     let archivo_csv = File::create(nombre_archivo_csv)?;
 
     let mut writer = Writer::from_writer(archivo_csv);
@@ -30,7 +30,7 @@ fn prueba_rendimiento<F>(writer: &mut Writer<File>, operacion: &str, funcion_ope
 where
     F: Fn(),
 {
-    let num_repeticiones = 10;
+    let num_repeticiones = 5000;
     let num_iteraciones = 100000000;
     let mut duraciones = Vec::with_capacity(num_repeticiones);
 

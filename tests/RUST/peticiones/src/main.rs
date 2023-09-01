@@ -8,7 +8,7 @@ async fn main() -> Result<(), reqwest::Error> {
     let url_get = "https://jsonplaceholder.typicode.com/posts/1";
     let url_post = "https://jsonplaceholder.typicode.com/posts";
 
-    let mut archivo_csv = File::create("resultados.csv").expect("Error al crear el archivo CSV");
+    let mut archivo_csv = File::create("testPeticionesRust.csv").expect("Error al crear el archivo CSV");
 
     writeln!(archivo_csv, "Iteración,Tipo,Tiempo (s)").expect("Error al escribir encabezado en el archivo");
 

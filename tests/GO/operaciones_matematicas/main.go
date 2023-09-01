@@ -11,7 +11,7 @@ import (
 func main() {
 	fmt.Println("Ejecutando pruebas de rendimiento...")
 
-	nombreArchivoCSV := "testMathGo.csv"
+	nombreArchivoCSV := "testOperacionesGo.csv"
 	archivoCSV, _ := os.Create(nombreArchivoCSV)
 	defer archivoCSV.Close()
 
@@ -32,7 +32,7 @@ func main() {
 }
 
 func pruebaRendimiento(writer *csv.Writer, operacion string, funcionOperacion func()) {
-	numRepeticiones := 5
+	numRepeticiones := 5000
 	numIteraciones := 100000000
 	duraciones := make([]float64, numRepeticiones)
 
