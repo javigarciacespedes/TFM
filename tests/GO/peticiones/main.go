@@ -25,7 +25,7 @@ func main() {
 
 	escritorCSV.Write([]string{"Iteración", "Tipo", "Tiempo (s)"})
 
-	for i := 0; i < 5000; i++ {
+	for i := 0; i < 1000; i++ {
 		// GET
 		duracionTotalGET := time.Duration(0)
 		for j := 0; j < 10; j++ { // Ejecutar cada operación 10 veces

@@ -30,7 +30,7 @@ fn prueba_rendimiento<F>(writer: &mut Writer<File>, operacion: &str, funcion_ope
 where
     F: Fn(),
 {
-    let num_repeticiones = 5000;
+    let num_repeticiones = 1000;
     let num_iteraciones = 100000000;
     let mut duraciones = Vec::with_capacity(num_repeticiones);
 

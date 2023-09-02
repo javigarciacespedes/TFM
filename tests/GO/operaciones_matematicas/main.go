@@ -32,7 +32,7 @@ func main() {
 }
 
 func pruebaRendimiento(writer *csv.Writer, operacion string, funcionOperacion func()) {
-	numRepeticiones := 5000
+	numRepeticiones := 1000
 	numIteraciones := 100000000
 	duraciones := make([]float64, numRepeticiones)
 

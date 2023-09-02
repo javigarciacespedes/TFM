@@ -12,7 +12,7 @@ async fn main() -> Result<(), reqwest::Error> {
 
     writeln!(archivo_csv, "Iteración,Tipo,Tiempo (s)").expect("Error al escribir encabezado en el archivo");
 
-    for i in 0..5 {
+    for i in 0..1000 {
         // GET
         let mut duracion_total_get = Duration::new(0, 0);
         for _ in 0..10 {
